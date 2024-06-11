@@ -105,13 +105,16 @@ router.delete(
     isAuth,
     isAdmin,
     asyncHandler(async (req, res) => {
-        const user = await User.findById(req.params.id);
+        const userId = req.params.id;
+
+        const user = await User.findById(userId);
+
         if (user) {
             if (user.email === 'admin@example.com') {
                 res.status(400).send({ message: 'Cannot Delete Admin User' });
                 return;
             }
-            await user.remove();
+            await user.deleteOne();  // Use deleteOne() to remove the document
             res.send({ message: 'User Deleted' });
         } else {
             res.status(404).send({ message: 'User Not Found' });
