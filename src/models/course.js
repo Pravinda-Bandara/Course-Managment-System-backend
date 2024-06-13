@@ -1,13 +1,13 @@
-// src/models/course.js
+// models/course.js
 import mongoose from 'mongoose';
 
 const courseSchema = new mongoose.Schema({
     title: { type: String, required: true },
-    description: { type: String },
-    duration: { type: Number },
-    instructor: { type: String },
+    description: { type: String, required: true },
+    duration: { type: Number, required: true },
+    instructor: { type: String, required: true },
 });
 
-const Course = mongoose.model('CourseModel', courseSchema);
+const Course = mongoose.model('Coursemodels', courseSchema);
 
 export default Course;
