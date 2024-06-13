@@ -23,8 +23,21 @@ import Course from "../models/course.js";
     }
 });
 
+const getEnrollmentStatus = asyncHandler(async (req, res) => {
+    const { studentId, courseId } = req.query;
+    const enrollment = await Enrollment.findOne({ studentId, courseId });
+
+    if (enrollment) {
+        res.json({ enrolled: true});
+    } else {
+        res.json({ enrolled: false });
+    }
+});
 
 
+// @desc    Create new enrollment
+// @route   POST /api/enrollments
+// @access  Private/User
 // @desc    Create new enrollment
 // @route   POST /api/enrollments
 // @access  Private/User
@@ -48,13 +61,14 @@ const createEnrollment = asyncHandler(async (req, res) => {
 
     const enrollment = new Enrollment({ studentId, courseId });
     const createdEnrollment = await enrollment.save();
+
     res.status(201).json(createdEnrollment);
 });
 
 // @desc    Delete enrollment by student ID and course ID
-// @route   DELETE /api/enrollments
+// @route   DELETE /api/enrollments/:id
 // @access  Private/User
- const deleteEnrollmentById = asyncHandler(async (req, res) => {
+const deleteEnrollmentById = asyncHandler(async (req, res) => {
     const enrollmentId = req.params.id;
 
     const enrollment = await Enrollment.findById(enrollmentId);
@@ -67,4 +81,4 @@ const createEnrollment = asyncHandler(async (req, res) => {
     }
 });
 
-export { getEnrollmentsByStudentId, createEnrollment, deleteEnrollmentById};
+export { getEnrollmentsByStudentId, createEnrollment, deleteEnrollmentById, getEnrollmentStatus };

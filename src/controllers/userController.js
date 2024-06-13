@@ -18,21 +18,20 @@ export const getUserById = asyncHandler(async (req, res) => {
 });
 
 // Get all admins (admin only)
-export const getAdmins = asyncHandler(async (req, res) => {
-    const admins = await User.find({ role: 'admin' });
-    res.send(admins);
+export const getUsers = asyncHandler(async (req, res) => {
+    const users = await User.find();
+    res.send(users);
 });
 
-// Get all students (admin only)
-export const getStudents = asyncHandler(async (req, res) => {
-    const students = await User.find({ role: 'student' });
-    res.send(students);
-});
+
 
 // Sign in
 export const signin = asyncHandler(async (req, res) => {
     const user = await User.findOne({ email: req.body.email });
     if (user && bcrypt.compareSync(req.body.password, user.password)) {
+
+
+        // Include enrolled course IDs in the response
         res.send({
             _id: user._id,
             name: user.name,
@@ -45,12 +44,13 @@ export const signin = asyncHandler(async (req, res) => {
     }
 });
 
+
 // Sign up
 export const signup = asyncHandler(async (req, res) => {
     const user = await User.create({
         name: req.body.name,
         email: req.body.email,
-        password: bcrypt.hashSync(req.body.password, 8),
+        password: bcrypt.hashSync(req.body.password, 8)
     });
 
     res.send({
@@ -61,6 +61,7 @@ export const signup = asyncHandler(async (req, res) => {
         token: generateToken(user),
     });
 });
+
 
 // Update user (admin only)
 export const updateUser = asyncHandler(async (req, res) => {
