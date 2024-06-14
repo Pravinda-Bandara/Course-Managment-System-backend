@@ -3,12 +3,9 @@ import asyncHandler from 'express-async-handler';
 import Enrollment from "../models/enrollment.js";
 import User from "../models/user.js";
 import Course from "../models/course.js";
+import mongoose from "mongoose";
 
-// @desc    Fetch all enrollments by student ID
-// @route   GET /api/enrollments/student/:studentId
-// @access  Private/User
 
-// Controller function to get enrollments by student ID
 const getEnrollmentsByStudentId = asyncHandler(async (req, res) => {
     try {
         const enrollments = await Enrollment.find({ studentId: req.params.studentId });
@@ -43,12 +40,6 @@ const getEnrollmentStatus = asyncHandler(async (req, res) => {
 
 
 
-// @desc    Create new enrollment
-// @route   POST /api/enrollments
-// @access  Private/User
-// @desc    Create new enrollment
-// @route   POST /api/enrollments
-// @access  Private/User
 const createEnrollment = asyncHandler(async (req, res) => {
     const { studentId, courseId } = req.body;
 
@@ -73,9 +64,6 @@ const createEnrollment = asyncHandler(async (req, res) => {
     res.status(201).json(createdEnrollment);
 });
 
-// @desc    Delete enrollment by student ID and course ID
-// @route   DELETE /api/enrollments/:id
-// @access  Private/User
 const deleteEnrollmentById = asyncHandler(async (req, res) => {
     const enrollmentId = req.params.id;
 
@@ -89,4 +77,52 @@ const deleteEnrollmentById = asyncHandler(async (req, res) => {
     }
 });
 
-export { getEnrollmentsByStudentId, createEnrollment, deleteEnrollmentById, getEnrollmentStatus };
+const getCoursesWithEnrollmentStatus = asyncHandler(async (req, res) => {
+    const { studentId } = req.params;
+
+    try {
+        const detailedEnrollments = await Course.aggregate([
+            {
+                $lookup: {
+                    from: 'enrollmentmodels', // The name of the Enrollment collection
+                    let: { courseId: '$_id' },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { $eq: ['$courseId', '$$courseId'] },
+                                        { $eq: ['$studentId', new mongoose.Types.ObjectId(studentId)] }
+                                    ]
+                                }
+                            }
+                        }
+                    ],
+                    as: 'enrollmentDetails'
+                }
+            },
+            {
+                $addFields: {
+                    enrolled: { $gt: [{ $size: '$enrollmentDetails' }, 0] }
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    title: 1,
+                    description: 1,
+                    duration: 1,
+                    instructor: 1,
+                    instructor_num: 1,
+                    enrolled: 1
+                }
+            }
+        ]);
+
+        res.json(detailedEnrollments);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+export { getEnrollmentsByStudentId, createEnrollment, deleteEnrollmentById, getEnrollmentStatus,getCoursesWithEnrollmentStatus };
