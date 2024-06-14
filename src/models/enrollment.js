@@ -16,7 +16,7 @@ enrollmentSchema.pre('validate', async function(next) {
     if (enrollment.isModified('studentId')) {
         const user = await User.findById(enrollment.studentId);
         if (user) {
-            enrollment.studentEmail = user.email; // assuming User model has email field
+            enrollment.studentEmail = user.email;
         } else {
             return next(new Error('User not found'));
         }
@@ -25,7 +25,7 @@ enrollmentSchema.pre('validate', async function(next) {
     if (enrollment.isModified('courseId')) {
         const course = await Course.findById(enrollment.courseId);
         if (course) {
-            enrollment.courseName = course.title; // assuming Course model has title field
+            enrollment.courseName = course.title;
         } else {
             return next(new Error('Course not found'));
         }
