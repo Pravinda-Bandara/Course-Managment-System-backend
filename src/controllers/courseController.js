@@ -28,12 +28,13 @@ export const getCourseById = asyncHandler(async (req, res) => {
 // @route   POST /api/courses
 // @access  Private/Admin
 export const createCourse = asyncHandler(async (req, res) => {
-    const { title, description, duration, instructor } = req.body;
+    const { title, description, duration, instructor, instructor_num } = req.body;
     const course = new Course({
         title,
         description,
         duration,
         instructor,
+        instructor_num
     });
     const createdCourse = await course.save();
     res.status(201).json(createdCourse);
@@ -43,13 +44,14 @@ export const createCourse = asyncHandler(async (req, res) => {
 // @route   PATCH /api/courses/:id
 // @access  Private/Admin
 export const updateCourse = asyncHandler(async (req, res) => {
-    const { title, description, duration, instructor } = req.body;
+    const { title, description, duration, instructor, instructor_num } = req.body;
     const course = await Course.findById(req.params.id);
     if (course) {
         course.title = title;
         course.description = description;
         course.duration = duration;
         course.instructor = instructor;
+        course. instructor_num =  instructor_num;
         const updatedCourse = await course.save();
         res.json(updatedCourse);
     } else {

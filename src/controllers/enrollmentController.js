@@ -28,11 +28,12 @@ const getEnrollmentStatus = asyncHandler(async (req, res) => {
     const enrollment = await Enrollment.findOne({ studentId, courseId });
 
     if (enrollment) {
-        res.json({ enrolled: true});
+        res.json({ enrolled: true, enrollmentId: enrollment._id });
     } else {
         res.json({ enrolled: false });
     }
 });
+
 
 
 // @desc    Create new enrollment

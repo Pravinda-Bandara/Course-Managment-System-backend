@@ -37,6 +37,7 @@ export const signin = asyncHandler(async (req, res) => {
             name: user.name,
             email: user.email,
             role: user.role,
+            number:user.number,
             token: generateToken(user),
         });
     } else {
@@ -50,6 +51,7 @@ export const signup = asyncHandler(async (req, res) => {
     const user = await User.create({
         name: req.body.name,
         email: req.body.email,
+        number:req.body.number,
         password: bcrypt.hashSync(req.body.password, 8)
     });
 
@@ -58,6 +60,7 @@ export const signup = asyncHandler(async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        number: user.number,
         token: generateToken(user),
     });
 });
@@ -70,8 +73,10 @@ export const updateUser = asyncHandler(async (req, res) => {
         user.name = req.body.name || user.name;
         user.email = req.body.email || user.email;
         user.role = req.body.role || user.role;
+        user.number = req.body.number || user.number;
         const updatedUser = await user.save();
-        res.send({ message: 'User Updated', user: updatedUser });
+        const { password, ...userWithoutPassword } = updatedUser.toObject(); // Exclude password from the response
+        res.send({ message: 'User Updated', user: userWithoutPassword });
     } else {
         res.status(404).send({ message: 'User Not Found' });
     }
