@@ -8,18 +8,25 @@ import Course from "../models/course.js";
 // @route   GET /api/enrollments/student/:studentId
 // @access  Private/User
 
- const getEnrollmentsByStudentId = asyncHandler(async (req, res) => {
-    const enrollments = await Enrollment.find({ studentId: req.params.studentId });
+// Controller function to get enrollments by student ID
+const getEnrollmentsByStudentId = asyncHandler(async (req, res) => {
+    try {
+        const enrollments = await Enrollment.find({ studentId: req.params.studentId });
 
-    if (enrollments.length > 0) {
-        const enrollmentDetails = enrollments.map(enrollment => ({
-            enrollmentId: enrollment._id,
-            studentId: enrollment.studentId,
-            courseId: enrollment.courseId
-        }));
-        res.json(enrollmentDetails);
-    } else {
-        res.status(404).json({ message: 'No enrollments found for this student' });
+        if (enrollments.length > 0) {
+            const enrollmentDetails = enrollments.map(enrollment => ({
+                enrollmentId: enrollment._id,
+                studentId: enrollment.studentId,
+                courseId: enrollment.courseId,
+                courseName: enrollment.courseName,
+                studentEmail: enrollment.studentEmail,
+            }));
+            res.json(enrollmentDetails);
+        } else {
+            res.status(404).json({ message: 'No enrollments found for this student' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 });
 
