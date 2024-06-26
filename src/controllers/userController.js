@@ -4,6 +4,7 @@ import { generateToken, isAdmin, isAuth } from '../utils.js';
 import bcrypt from 'bcryptjs';
 import User from '../models/user.js';
 import Enrollment from "../models/enrollment.js";
+import {validateLoginInput, validateRegistrationInput} from "../Utils/userValidationUtil.js";
 
 const router = express.Router();
 
@@ -25,34 +26,26 @@ export const getUsers = asyncHandler(async (req, res) => {
 
 
 
-// Sign in
-export const signin = asyncHandler(async (req, res) => {
-    const user = await User.findOne({ email: req.body.email });
-    if (user && bcrypt.compareSync(req.body.password, user.password)) {
-
-
-        // Include enrolled course IDs in the response
-        res.send({
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            number:user.number,
-            token: generateToken(user),
-        });
-    } else {
-        res.status(401).send({ message: 'Invalid email or password' });
-    }
-});
-
-
 // Sign up
 export const signup = asyncHandler(async (req, res) => {
+    const { name, email, number, password } = req.body;
+    const validationError = validateRegistrationInput(name, email, number, password);
+    if (validationError) {
+        return res.status(400).send({ message: validationError });
+    }
+
+    // Check if user with the given email already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+        return res.status(400).send({ message: 'Email is already registered' });
+    }
+
+    // If email is not registered, proceed to create a new user
     const user = await User.create({
-        name: req.body.name,
-        email: req.body.email,
-        number:req.body.number,
-        password: bcrypt.hashSync(req.body.password, 8)
+        name,
+        email,
+        number,
+        password: bcrypt.hashSync(password, 8)
     });
 
     res.send({
@@ -65,6 +58,28 @@ export const signup = asyncHandler(async (req, res) => {
     });
 });
 
+// Sign in
+export const signin = asyncHandler(async (req, res) => {
+    const { email, password } = req.body;
+    const validationError = validateLoginInput(email, password);
+    if (validationError) {
+        return res.status(400).send({ message: validationError });
+    }
+
+    const user = await User.findOne({ email });
+    if (user && bcrypt.compareSync(password, user.password)) {
+        res.send({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            number: user.number,
+            token: generateToken(user),
+        });
+    } else {
+        res.status(401).send({ message: 'Invalid email or password' });
+    }
+});
 
 // Update user (admin only)
 export const updateUser = asyncHandler(async (req, res) => {

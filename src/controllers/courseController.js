@@ -1,8 +1,5 @@
 
 
-// @desc    Get all courses
-// @route   GET /api/courses
-// @access  Public
 import asyncHandler from "express-async-handler";
 import Course from "../models/course.js";
 import Enrollment from "../models/enrollment.js";
@@ -12,9 +9,7 @@ export const getCourses = asyncHandler(async (req, res) => {
     res.json(courses);
 });
 
-// @desc    Get a single course by ID
-// @route   GET /api/courses/:id
-// @access  Public
+
 export const getCourseById = asyncHandler(async (req, res) => {
     const course = await Course.findById(req.params.id);
     if (course) {
@@ -24,9 +19,7 @@ export const getCourseById = asyncHandler(async (req, res) => {
     }
 });
 
-// @desc    Create a new course
-// @route   POST /api/courses
-// @access  Private/Admin
+
 export const createCourse = asyncHandler(async (req, res) => {
     const { title, description, duration, instructor, instructor_num } = req.body;
     const course = new Course({
@@ -40,9 +33,7 @@ export const createCourse = asyncHandler(async (req, res) => {
     res.status(201).json(createdCourse);
 });
 
-// @desc    Update a course
-// @route   PATCH /api/courses/:id
-// @access  Private/Admin
+
 export const updateCourse = asyncHandler(async (req, res) => {
     const { title, description, duration, instructor, instructor_num } = req.body;
     const course = await Course.findById(req.params.id);
@@ -59,9 +50,7 @@ export const updateCourse = asyncHandler(async (req, res) => {
     }
 });
 
-// @desc    Delete a course
-// @route   DELETE /api/courses/:id
-// @access  Private/Admin
+
 export const deleteCourse = asyncHandler(async (req, res) => {
     const course = await Course.findById(req.params.id);
     if (course) {

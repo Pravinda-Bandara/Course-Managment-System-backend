@@ -10,6 +10,8 @@ import { isAuth, isAdmin } from '../utils.js';
 
 const router = express.Router();
 
+//api/users
+
 router.patch('/:id', isAuth, isAdmin, updateUser);
 router.delete('/:id', isAuth, isAdmin, deleteUser);
 router.get('/', isAuth, isAdmin, getUsers);
