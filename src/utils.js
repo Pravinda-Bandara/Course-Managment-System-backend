@@ -10,7 +10,7 @@ export const generateToken = (user) => {
         },
         process.env.JWT_SECRET || 'somethingsecret',
         {
-            expiresIn: '30d',
+            expiresIn: '7d',
         }
     );
 };
@@ -24,14 +24,14 @@ export const isAuth = (req, res, next) => {
             process.env.JWT_SECRET || 'somethingsecret',
             (err, decode) => {
                 if (err) {
-                    return res.status(401).json({ message: 'Invalid Token' });
+                    return res.status(401).json({ message: 'The provided token is invalid. Please authenticate again.' });
                 }
                 req.user = decode;
                 next();
             }
         );
     } else {
-        res.status(401).json({ message: 'No Token' });
+        res.status(401).json({ message: 'Authorization token is missing. Access is denied.' });
     }
 };
 
@@ -39,6 +39,6 @@ export const isAdmin = (req, res, next) => {
     if (req.user && req.user.role === 'admin') {
         next();
     } else {
-        res.status(403).send({ message: 'Invalid Admin Token' });
+        res.status(403).send({ message: 'Access denied. Administrator privileges are required.' });
     }
 };
