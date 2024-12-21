@@ -1,10 +1,9 @@
-// controllers/enrollmentController.js
 import asyncHandler from 'express-async-handler';
 import Enrollment from "../models/enrollment.js";
 import User from "../models/user.js";
 import Course from "../models/course.js";
 import mongoose from "mongoose";
-
+import { ApiResponse } from '../utils.js';
 
 const getEnrollmentsByStudentId = asyncHandler(async (req, res) => {
     try {
@@ -18,12 +17,12 @@ const getEnrollmentsByStudentId = asyncHandler(async (req, res) => {
                 courseName: enrollment.courseName,
                 studentEmail: enrollment.studentEmail,
             }));
-            res.json(enrollmentDetails);
+            res.json(ApiResponse({ data: enrollmentDetails }));
         } else {
-            res.status(404).json({ message: 'No enrollments found for this student' });
+            res.status(404).json(ApiResponse({ success: false, error: 'No enrollments found for this student' }));
         }
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json(ApiResponse({ success: false, error: error.message }));
     }
 });
 
@@ -32,13 +31,11 @@ const getEnrollmentStatus = asyncHandler(async (req, res) => {
     const enrollment = await Enrollment.findOne({ studentId, courseId });
 
     if (enrollment) {
-        res.json({ enrolled: true, enrollmentId: enrollment._id });
+        res.json(ApiResponse({ data: { enrolled: true, enrollmentId: enrollment._id } }));
     } else {
-        res.json({ enrolled: false });
+        res.json(ApiResponse({ data: { enrolled: false } }));
     }
 });
-
-
 
 const createEnrollment = asyncHandler(async (req, res) => {
     const { studentId, courseId } = req.body;
@@ -47,21 +44,21 @@ const createEnrollment = asyncHandler(async (req, res) => {
     const user = await User.findById(studentId);
 
     if (!course || !user) {
-        res.status(404).json({ message: 'Course or User not found' });
+        res.status(404).json(ApiResponse({ success: false, error: 'Course or User not found' }));
         return;
     }
 
     const existingEnrollment = await Enrollment.findOne({ studentId, courseId });
 
     if (existingEnrollment) {
-        res.status(400).json({ message: 'Student is already enrolled in this course' });
+        res.status(400).json(ApiResponse({ success: false, error: 'Student is already enrolled in this course' }));
         return;
     }
 
     const enrollment = new Enrollment({ studentId, courseId });
     const createdEnrollment = await enrollment.save();
 
-    res.status(201).json(createdEnrollment);
+    res.status(201).json(ApiResponse({ data: createdEnrollment }));
 });
 
 const deleteEnrollmentById = asyncHandler(async (req, res) => {
@@ -71,9 +68,9 @@ const deleteEnrollmentById = asyncHandler(async (req, res) => {
 
     if (enrollment) {
         await enrollment.deleteOne();  // Use deleteOne() to remove the document
-        res.json({ message: 'Enrollment removed' });
+        res.json(ApiResponse({ data: { message: 'Enrollment removed' } }));
     } else {
-        res.status(404).json({ message: 'Enrollment not found' });
+        res.status(404).json(ApiResponse({ success: false, error: 'Enrollment not found' }));
     }
 });
 
@@ -119,10 +116,10 @@ const getCoursesWithEnrollmentStatus = asyncHandler(async (req, res) => {
             }
         ]);
 
-        res.json(detailedEnrollments);
+        res.json(ApiResponse({ data: detailedEnrollments }));
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json(ApiResponse({ success: false, error: error.message }));
     }
 });
 
-export { getEnrollmentsByStudentId, createEnrollment, deleteEnrollmentById, getEnrollmentStatus,getCoursesWithEnrollmentStatus };
+export { getEnrollmentsByStudentId, createEnrollment, deleteEnrollmentById, getEnrollmentStatus, getCoursesWithEnrollmentStatus };
