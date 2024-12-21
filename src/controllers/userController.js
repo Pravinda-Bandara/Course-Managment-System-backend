@@ -1,10 +1,11 @@
 import express from 'express';
 import asyncHandler from 'express-async-handler';
-import { generateToken, isAdmin, isAuth } from '../utils.js';
+import { generateToken } from '../utils.js';
 import bcrypt from 'bcryptjs';
 import User from '../models/user.js';
 import Enrollment from "../models/enrollment.js";
-import {validateLoginInput, validateRegistrationInput} from "../Utils/userValidationUtil.js";
+import { validateLoginInput, validateRegistrationInput } from "../Utils/userValidationUtil.js";
+import { ApiResponse } from '../utils.js';
 
 const router = express.Router();
 
@@ -12,35 +13,31 @@ const router = express.Router();
 export const getUserById = asyncHandler(async (req, res) => {
     const user = await User.findById(req.params.id);
     if (user) {
-        res.send(user);
+        res.send(ApiResponse({ data: user }));
     } else {
-        res.status(404).send({ message: 'User Not Found' });
+        res.status(404).send(ApiResponse({ success: false, error: 'User Not Found' }));
     }
 });
 
-// Get all admins (admin only)
+// Get all users (admin only)
 export const getUsers = asyncHandler(async (req, res) => {
     const users = await User.find();
-    res.send(users);
+    res.send(ApiResponse({ data: users }));
 });
-
-
 
 // Sign up
 export const signup = asyncHandler(async (req, res) => {
     const { name, email, number, password } = req.body;
     const validationError = validateRegistrationInput(name, email, number, password);
     if (validationError) {
-        return res.status(400).send({ message: validationError });
+        return res.status(400).send(ApiResponse({ success: false, error: validationError }));
     }
 
-    // Check if user with the given email already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-        return res.status(400).send({ message: 'Email is already registered' });
+        return res.status(400).send(ApiResponse({ success: false, error: 'Email is already registered' }));
     }
 
-    // If email is not registered, proceed to create a new user
     const user = await User.create({
         name,
         email,
@@ -48,14 +45,16 @@ export const signup = asyncHandler(async (req, res) => {
         password: bcrypt.hashSync(password, 8)
     });
 
-    res.send({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        number: user.number,
-        token: generateToken(user),
-    });
+    res.send(ApiResponse({
+        data: {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            number: user.number,
+            token: generateToken(user),
+        }
+    }));
 });
 
 // Sign in
@@ -63,21 +62,23 @@ export const signin = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
     const validationError = validateLoginInput(email, password);
     if (validationError) {
-        return res.status(400).send({ message: validationError });
+        return res.status(400).send(ApiResponse({ success: false, error: validationError }));
     }
 
     const user = await User.findOne({ email });
     if (user && bcrypt.compareSync(password, user.password)) {
-        res.send({
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            number: user.number,
-            token: generateToken(user),
-        });
+        res.send(ApiResponse({
+            data: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                number: user.number,
+                token: generateToken(user),
+            }
+        }));
     } else {
-        res.status(401).send({ message: 'Invalid email or password' });
+        res.status(401).send(ApiResponse({ success: false, error: 'Invalid email or password' }));
     }
 });
 
@@ -90,29 +91,29 @@ export const updateUser = asyncHandler(async (req, res) => {
         user.role = req.body.role || user.role;
         user.number = req.body.number || user.number;
         const updatedUser = await user.save();
-        const { password, ...userWithoutPassword } = updatedUser.toObject(); // Exclude password from the response
-        res.send({ message: 'User Updated', user: userWithoutPassword });
+        const { password, ...userWithoutPassword } = updatedUser.toObject();
+        res.send(ApiResponse({
+            data: { message: 'User Updated', user: userWithoutPassword }
+        }));
     } else {
-        res.status(404).send({ message: 'User Not Found' });
+        res.status(404).send(ApiResponse({ success: false, error: 'User Not Found' }));
     }
 });
 
 // Delete user (admin only)
 export const deleteUser = asyncHandler(async (req, res) => {
     const userId = req.params.id;
-
     const user = await User.findById(userId);
 
     if (user) {
         if (user.email === 'admin@example.com') {
-            res.status(400).send({ message: 'Cannot Delete Admin User' });
-            return;
+            return res.status(400).send(ApiResponse({ success: false, error: 'Cannot Delete Admin User' }));
         }
-        await user.deleteOne();  // Use deleteOne() to remove the document
-        await Enrollment.deleteMany({ studentId:req.params.id });
-        res.send({ message: 'User Deleted' });
+        await user.deleteOne();
+        await Enrollment.deleteMany({ studentId: req.params.id });
+        res.send(ApiResponse({ data: 'User Deleted' }));
     } else {
-        res.status(404).send({ message: 'User Not Found' });
+        res.status(404).send(ApiResponse({ success: false, error: 'User Not Found' }));
     }
 });
 

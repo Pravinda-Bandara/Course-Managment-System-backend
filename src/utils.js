@@ -42,3 +42,8 @@ export const isAdmin = (req, res, next) => {
         res.status(403).send({ message: 'Access denied. Administrator privileges are required.' });
     }
 };
+
+// utils/apiResponse.js
+export const ApiResponse = ({ data = null, success = true, error = null }) => {
+    return { data, success, error };
+};
